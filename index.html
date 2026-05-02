@@ -1,18 +1,9 @@
-python3 << 'EOF'
-import json, os
-
-with open("/home/claude/imgdata2.json") as f:
-    imgs = json.load(f)
-
-def img(key, alt):
-    return f'<img src="data:image/jpeg;base64,{imgs[key]}" alt="{alt}" onclick="openLightbox(this.src)">'
-
 html = """<!DOCTYPE html>
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <title>絲媛 SIYÆ | 手工奢華小提琴盒</title>
-<meta name="description" content="絲媛 SIYÆ — 職業樂手親身打造。頭層牛皮、天然染劑、全金屬五金，26國巡演淬鍊的奢華琴盒。">
+<meta name="description" content="絲媛 SIYÆ — 職業樂手親身打造。頭層牛皮、天然染劑、全金屬五金，近30國巡演淬鍊的奢華琴盒。">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
@@ -133,7 +124,7 @@ p{max-width:740px;line-height:2;color:#cfcfcf;margin:8px auto;font-size:15px;}
     <div class="divider divider-gold"></div>
 
     <p>絲媛 SIYÆ 誕生於一位職業樂手的親身體會。</p>
-    <p>作為職業交響樂團演奏者，擁有豐富的舞台演出經驗，<br>並走遍 <b class="gold">26 個國家</b>巡演，深刻明白一件事——</p>
+    <p>作為職業交響樂團演奏者，擁有豐富的舞台演出經驗，<br>並走遍 <b class="gold">近30 個國家</b>巡演，深刻明白一件事——</p>
     <p style="font-style:italic;color:#d4af37;font-size:17px;margin:18px auto;">
       「在音樂廳台上演得好，台下的琴盒同樣重要。」
     </p>
@@ -378,8 +369,3 @@ function submitPay(){
 </body>
 </html>"""
 
-with open("/mnt/user-data/outputs/index.html","w") as f:
-    f.write(html)
-size=os.path.getsize("/mnt/user-data/outputs/index.html")
-print(f"完成！{size//1024} KB")
-EOF
