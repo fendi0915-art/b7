@@ -1,0 +1,385 @@
+python3 << 'EOF'
+import json, os
+
+with open("/home/claude/imgdata2.json") as f:
+    imgs = json.load(f)
+
+def img(key, alt):
+    return f'<img src="data:image/jpeg;base64,{imgs[key]}" alt="{alt}" onclick="openLightbox(this.src)">'
+
+html = """<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>絲媛 SIYÆ | 手工奢華小提琴盒</title>
+<meta name="description" content="絲媛 SIYÆ — 職業樂手親身打造。頭層牛皮、天然染劑、全金屬五金，26國巡演淬鍊的奢華琴盒。">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:#0b0b0b;color:#eaeaea;font-family:'Playfair Display',serif;}
+
+/* NAV */
+nav{position:fixed;top:0;width:100%;display:flex;justify-content:center;gap:14px;padding:13px 10px;background:rgba(11,11,11,0.88);backdrop-filter:blur(12px);font-size:11px;letter-spacing:2px;z-index:100;flex-wrap:wrap;}
+nav a{color:#d4af37;text-decoration:none;white-space:nowrap;transition:opacity .3s;}
+nav a:hover{opacity:.6;}
+
+/* SECTIONS */
+section{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:110px 24px 70px;}
+
+/* TYPE */
+h1{font-family:'Cinzel',serif;font-size:clamp(38px,9vw,80px);color:#d4af37;letter-spacing:6px;animation:glow 4s infinite;}
+@keyframes glow{0%,100%{text-shadow:0 0 12px rgba(212,175,55,.2);}50%{text-shadow:0 0 32px rgba(212,175,55,.65);}}
+h2{font-family:'Cinzel',serif;font-size:clamp(20px,4.5vw,32px);letter-spacing:3px;margin-bottom:12px;}
+p{max-width:740px;line-height:2;color:#cfcfcf;margin:8px auto;font-size:15px;}
+.sub{font-size:12px;color:#888;letter-spacing:2px;margin-top:8px;}
+.tag{display:inline-block;border:1px solid rgba(212,175,55,.35);padding:4px 14px;font-size:11px;letter-spacing:2px;color:#d4af37;margin:4px;}
+
+/* DIVIDER */
+.divider{width:50px;height:1px;margin:20px auto;opacity:.4;}
+.divider-gold{background:#d4af37;}
+.divider-orange{background:#ff9b4a;}
+.divider-grey{background:#b5b5b5;}
+
+/* COLORS */
+.gold{color:#d4af37;}.orange{color:#ff9b4a;}.grey{color:#b5b5b5;}
+.bg-orange{background:radial-gradient(circle at top,#1d1109,#0b0b0b);}
+.bg-grey{background:radial-gradient(circle at top,#131313,#0b0b0b);}
+.bg-gold{background:radial-gradient(circle at top,#1b1607,#0b0b0b);}
+
+/* CARD */
+.card{border:1px solid rgba(212,175,55,.22);padding:28px 34px;max-width:520px;margin:22px auto 0;background:rgba(255,255,255,.02);transition:.4s;}
+.card:hover{transform:translateY(-6px);border-color:#d4af37;box-shadow:0 12px 32px rgba(212,175,55,.14);}
+.price{font-size:26px;font-family:'Cinzel',serif;margin:10px 0;}
+
+/* BADGE ROW */
+.badges{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:18px 0;}
+
+/* BUTTON */
+.btn{display:inline-block;margin-top:14px;padding:13px 32px;border:1px solid #d4af37;color:#d4af37;text-decoration:none;letter-spacing:2px;font-size:12px;font-family:'Cinzel',serif;transition:.4s;}
+.btn:hover{background:#d4af37;color:#0b0b0b;}
+.btn-orange{border-color:#ff9b4a;color:#ff9b4a;}
+.btn-orange:hover{background:#ff9b4a;color:#0b0b0b;}
+.btn-grey{border-color:#b5b5b5;color:#b5b5b5;}
+.btn-grey:hover{background:#b5b5b5;color:#0b0b0b;}
+
+/* GALLERY */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;max-width:980px;width:100%;margin-top:28px;}
+.gallery img{width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid rgba(212,175,55,.1);transition:.4s;cursor:pointer;display:block;}
+.gallery img:hover{border-color:#d4af37;transform:scale(1.03);box-shadow:0 8px 28px rgba(212,175,55,.18);}
+
+/* FADE */
+.fade{opacity:0;transform:translateY(38px);transition:1s ease;}
+.fade.show{opacity:1;transform:translateY(0);}
+.float{animation:float 5s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+
+/* PAYMENT MODAL */
+#pay-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:200;justify-content:center;align-items:center;padding:20px;}
+#pay-modal.on{display:flex;}
+.pay-box{background:#111;border:1px solid rgba(212,175,55,.3);padding:36px;max-width:480px;width:100%;position:relative;}
+.pay-box h3{font-family:'Cinzel',serif;color:#d4af37;letter-spacing:2px;margin-bottom:22px;font-size:18px;}
+.pay-close{position:absolute;top:14px;right:18px;font-size:28px;color:#d4af37;cursor:pointer;line-height:1;}
+.pay-box label{display:block;font-size:12px;color:#999;letter-spacing:1px;margin-bottom:6px;margin-top:16px;}
+.pay-box input,.pay-box select{width:100%;background:#1a1a1a;border:1px solid rgba(212,175,55,.25);color:#eaeaea;padding:11px 14px;font-size:14px;outline:none;font-family:'Playfair Display',serif;}
+.pay-box input:focus,.pay-box select:focus{border-color:#d4af37;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.pay-submit{width:100%;margin-top:22px;padding:14px;background:#d4af37;color:#0b0b0b;border:none;font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;cursor:pointer;transition:.3s;}
+.pay-submit:hover{background:#c49b2a;}
+.pay-note{font-size:11px;color:#666;margin-top:12px;line-height:1.8;}
+.pay-success{display:none;text-align:center;padding:20px 0;}
+.pay-success h3{color:#d4af37;font-family:'Cinzel',serif;font-size:20px;margin-bottom:12px;}
+
+/* LIGHTBOX */
+#lb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:999;justify-content:center;align-items:center;}
+#lb.on{display:flex;}
+#lb img{max-width:92vw;max-height:88vh;object-fit:contain;}
+#lb-x{position:absolute;top:18px;right:24px;font-size:38px;color:#d4af37;cursor:pointer;line-height:1;font-family:sans-serif;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#home">HOME</a>
+  <a href="#story">STORY</a>
+  <a href="#craft">CRAFT</a>
+  <a href="#orange">ORANGE</a>
+  <a href="#grey">GREY</a>
+  <a href="#gold">GOLD</a>
+  <a href="#custom">CUSTOM</a>
+  <a href="#order">ORDER</a>
+</nav>
+
+<!-- HOME -->
+<section id="home">
+  <div class="fade float">
+    <h1>絲媛 SIYÆ</h1>
+    <p class="sub">HANDMADE LUXURY VIOLIN CASE &nbsp;·&nbsp; PURE CRAFTSMANSHIP</p>
+    <div style="margin-top:28px;">
+      <span class="tag">職業樂手設計</span>
+      <span class="tag">26國巡演淬鍊</span>
+      <span class="tag">工廠30年以上高訂品質</span>
+      <span class="tag">頭層牛皮</span>
+      <span class="tag">全金屬五金</span>
+    </div>
+  </div>
+</section>
+
+<!-- STORY -->
+<section id="story">
+  <div class="fade">
+    <h2 class="gold">STORY</h2>
+    <div class="divider divider-gold"></div>
+
+    <p>絲媛 SIYÆ 誕生於一位職業樂手的親身體會。</p>
+    <p>作為職業交響樂團演奏者，擁有豐富的舞台演出經驗，<br>並走遍 <b class="gold">26 個國家</b>巡演，深刻明白一件事——</p>
+    <p style="font-style:italic;color:#d4af37;font-size:17px;margin:18px auto;">
+      「在音樂廳台上演得好，台下的琴盒同樣重要。」
+    </p>
+    <p>琴盒是演奏者與舞台之間的第一道橋樑。<br>它保護的不只是樂器，更是每一次演出的準備與心情。</p>
+    <p>傳統結構在長途移動中容易產生車線鬆動與結構疲乏，<br>因此 SIYÆ 以手工拉皮工藝重新設計結構，讓張力更穩定、壽命更持久。</p>
+    <p>每一只琴盒以天然頭層牛皮製作，搭配天然染劑上色，<br>減少化學處理，親膚不刺激，隨時間更呈現獨特自然光澤。</p>
+
+    <div class="badges" style="margin-top:24px;">
+      <span class="tag">職業樂團演出經驗</span>
+      <span class="tag">26國國際巡演</span>
+      <span class="tag">工廠創立30年以上</span>
+      <span class="tag">高訂品質保證</span>
+    </div>
+  </div>
+</section>
+
+<!-- CRAFT -->
+<section id="craft">
+  <div class="fade">
+    <h2 class="gold">CRAFT &amp; DETAILS</h2>
+    <div class="divider divider-gold"></div>
+    <p>· 天然頭層牛皮，一牛一盒，全手工拉皮成形</p>
+    <p>· 天然染劑上色，親膚不刺激，色澤穩定不易褪色</p>
+    <p>· 全金屬五金系統（拉鍊、鎖扣、背帶扣），無塑膠件</p>
+    <p>· 防潑水、耐刮耐磨，隨使用呈現自然包漿光澤</p>
+    <p>· 工廠創立逾 30 年，高訂縫製品質把關</p>
+    <p style="margin-top:18px;color:#d4af37;">⏱ 貨到時間約 3 週至 1 個月（手工訂製）</p>
+  </div>
+</section>
+
+<!-- ORANGE -->
+<section id="orange" class="bg-orange">
+  <div class="fade">
+    <h2 class="orange">ARTISTIC ORANGE</h2>
+    <div class="divider divider-orange"></div>
+    <p>為舞台與情緒而生。愛馬仕橘，張揚而不失優雅。</p>
+    <div class="card">
+      <div>🟧 愛馬仕橘版本</div>
+      <div class="price orange">NT$ 42,000</div>
+      <p style="font-size:12px;color:#888;">貨到時間約 3 週～1 個月</p>
+      <a class="btn btn-orange" href="#" onclick="openPay('ARTISTIC ORANGE — 愛馬仕橘','NT$ 42,000');return false;">立即訂購 / PAY NOW</a>
+      <br>
+      <a class="btn btn-orange" style="margin-top:10px;" href="https://line.me/ti/p/fendi-chang">LINE 詢問</a>
+    </div>
+    <div class="gallery">
+""" + img("orange1","Artistic Orange 正面") + "\n" \
+    + img("orange2","Artistic Orange 側面背帶") + "\n" \
+    + img("orange3","Artistic Orange 五金鎖扣") + "\n" \
+    + img("orange4","Artistic Orange 開蓋放琴") + """
+    </div>
+  </div>
+</section>
+
+<!-- GREY -->
+<section id="grey" class="bg-grey">
+  <div class="fade">
+    <h2 class="grey">PROFESSIONAL GREY</h2>
+    <div class="divider divider-grey"></div>
+    <p>理性結構，專業導向。沉穩太空灰，適合所有正式演出場合。</p>
+    <div class="card">
+      <div>◼ 太空灰版本</div>
+      <div class="price grey">NT$ 42,000</div>
+      <p style="font-size:12px;color:#888;">貨到時間約 3 週～1 個月</p>
+      <a class="btn btn-grey" href="#" onclick="openPay('PROFESSIONAL GREY — 太空灰','NT$ 42,000');return false;">立即訂購 / PAY NOW</a>
+      <br>
+      <a class="btn btn-grey" style="margin-top:10px;" href="https://line.me/ti/p/fendi-chang">LINE 詢問</a>
+    </div>
+    <div class="gallery">
+""" + img("grey1","Professional Grey 正面") + "\n" \
+    + img("grey2","Professional Grey 側面背帶") + "\n" \
+    + img("grey3","Professional Grey 五金鎖扣") + "\n" \
+    + img("grey4","Professional Grey 開蓋放琴") + """
+    </div>
+  </div>
+</section>
+
+<!-- GOLD -->
+<section id="gold" class="bg-gold">
+  <div class="fade">
+    <h2 class="gold">LUXURY GOLD</h2>
+    <div class="divider divider-gold"></div>
+    <p>收藏級工藝。芬迪黃，稀有限量，搶眼識別度最高。</p>
+    <div class="card">
+      <div>■ 芬迪黃版本</div>
+      <div class="price gold">NT$ 42,000</div>
+      <p style="font-size:12px;color:#888;">貨到時間約 3 週～1 個月</p>
+      <a class="btn" href="#" onclick="openPay('LUXURY GOLD — 芬迪黃','NT$ 42,000');return false;">立即訂購 / PAY NOW</a>
+      <br>
+      <a class="btn" style="margin-top:10px;" href="https://line.me/ti/p/fendi-chang">LINE 詢問</a>
+    </div>
+    <div class="gallery">
+""" + img("gold1","Luxury Gold 正面") + "\n" \
+    + img("gold2","Luxury Gold 側面背帶") + "\n" \
+    + img("gold3","Luxury Gold 五金鎖扣") + "\n" \
+    + img("gold4","Luxury Gold 開蓋內部") + "\n" \
+    + img("gold5","Luxury Gold 背帶細節") + """
+    </div>
+  </div>
+</section>
+
+<!-- CUSTOM -->
+<section id="custom">
+  <div class="fade">
+    <h2 class="gold">CUSTOM COLOR</h2>
+    <div class="divider divider-gold"></div>
+    <p style="font-size:14px;letter-spacing:1px;color:#d4af37;">私人高訂系列</p>
+    <p>提供專屬顏色與皮革客製服務。</p>
+    <p>每件作品皆為獨立工藝製作，工廠逾 30 年製程保證品質。</p>
+    <p>交期約 3 週至 1 個月，歡迎 LINE 洽詢。</p>
+    <a class="btn" style="margin-top:22px;" href="https://line.me/ti/p/fendi-chang">LINE 客製諮詢</a>
+  </div>
+</section>
+
+<!-- ORDER -->
+<section id="order">
+  <div class="fade">
+    <h2 class="gold">ORDER</h2>
+    <div class="divider divider-gold"></div>
+    <p>IG 追蹤＋按讚＋留言「SIYÆ」可獲 <b class="gold">9 折折扣碼</b></p>
+    <div style="margin-top:22px;display:flex;flex-wrap:wrap;gap:12px;justify-content:center;">
+      <a class="btn" href="#" onclick="openPay('SIYÆ 琴盒','NT$ 42,000');return false;">刷卡訂購</a>
+      <a class="btn" href="https://line.me/ti/p/fendi-chang">LINE 詢問</a>
+    </div>
+    <p style="margin-top:36px;font-size:13px;color:#777;line-height:2.4;letter-spacing:1px;">
+      CONNECT WITH US<br>
+      FB：張絲媛<br>
+      LINE：fendi-chang<br>
+      IG：ssuyuan_chang_fendi<br>
+      THREADS：ssuyuan_chang_fendi<br><br>
+      CONTACT FOR PURCHASE &amp; CUSTOM REQUEST<br>
+      CUSTOM COLOR / PERSONALIZED DESIGN AVAILABLE
+    </p>
+  </div>
+</section>
+
+<!-- PAYMENT MODAL -->
+<div id="pay-modal" onclick="closePay(event)">
+  <div class="pay-box">
+    <span class="pay-close" onclick="document.getElementById('pay-modal').classList.remove('on')">×</span>
+
+    <div id="pay-form-wrap">
+      <h3>訂購付款 / CHECKOUT</h3>
+      <p style="font-size:12px;color:#888;margin-bottom:4px;">商品：<span id="pay-item" style="color:#d4af37;"></span></p>
+      <p style="font-size:12px;color:#888;">金額：<span id="pay-price" style="color:#d4af37;"></span></p>
+
+      <label>姓名 / Name</label>
+      <input type="text" id="f-name" placeholder="您的姓名">
+
+      <label>電話 / Phone</label>
+      <input type="tel" id="f-phone" placeholder="0912-345-678">
+
+      <label>Email</label>
+      <input type="email" id="f-email" placeholder="your@email.com">
+
+      <label>收件地址 / Address</label>
+      <input type="text" id="f-addr" placeholder="縣市、鄉鎮、地址">
+
+      <label>信用卡號 / Card Number</label>
+      <input type="text" id="f-card" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)">
+
+      <div class="row2">
+        <div>
+          <label>有效期限 / Expiry</label>
+          <input type="text" id="f-exp" placeholder="MM / YY" maxlength="7" oninput="formatExp(this)">
+        </div>
+        <div>
+          <label>安全碼 / CVV</label>
+          <input type="text" id="f-cvv" placeholder="123" maxlength="4">
+        </div>
+      </div>
+
+      <label>備註 / Note（顏色款式確認）</label>
+      <input type="text" id="f-note" placeholder="例：愛馬仕橘 ORANGE">
+
+      <button class="pay-submit" onclick="submitPay()">確認付款 / CONFIRM PAYMENT</button>
+      <p class="pay-note">
+        ⚠ 本頁為訂單預約表單，送出後由客服於 24 小時內以 LINE / Email 確認付款細節。<br>
+        貨到時間約 3 週至 1 個月（手工訂製）。
+      </p>
+    </div>
+
+    <div class="pay-success" id="pay-success-wrap">
+      <h3>✅ 訂單已送出！</h3>
+      <p style="color:#cfcfcf;margin-top:12px;">我們將於 24 小時內透過 LINE 或 Email 與您確認付款及出貨細節。</p>
+      <p style="color:#d4af37;margin-top:16px;font-size:13px;">感謝您選擇 絲媛 SIYÆ</p>
+      <button class="pay-submit" style="margin-top:22px;" onclick="document.getElementById('pay-modal').classList.remove('on')">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lb" onclick="closeLB()">
+  <span id="lb-x" onclick="closeLB()">×</span>
+  <img id="lb-img" src="" alt="" onclick="event.stopPropagation()">
+</div>
+
+<script>
+// FADE
+const fades=document.querySelectorAll('.fade');
+function reveal(){const vh=window.innerHeight;fades.forEach(el=>{if(el.getBoundingClientRect().top<vh-60)el.classList.add('show');});}
+window.addEventListener('scroll',reveal);
+window.addEventListener('load',reveal);
+
+// LIGHTBOX
+function openLightbox(src){document.getElementById('lb-img').src=src;document.getElementById('lb').classList.add('on');document.body.style.overflow='hidden';}
+function closeLB(){document.getElementById('lb').classList.remove('on');document.body.style.overflow='';}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLB();document.getElementById('pay-modal').classList.remove('on');}});
+
+// PAYMENT
+function openPay(item,price){
+  document.getElementById('pay-item').textContent=item;
+  document.getElementById('pay-price').textContent=price;
+  document.getElementById('f-note').value=item;
+  document.getElementById('pay-form-wrap').style.display='block';
+  document.getElementById('pay-success-wrap').style.display='none';
+  document.getElementById('pay-modal').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closePay(e){if(e.target===document.getElementById('pay-modal')){document.getElementById('pay-modal').classList.remove('on');document.body.style.overflow='';}}
+
+function formatCard(el){
+  let v=el.value.replace(/\D/g,'').substring(0,16);
+  el.value=v.replace(/(.{4})/g,'$1 ').trim();
+}
+function formatExp(el){
+  let v=el.value.replace(/\D/g,'').substring(0,4);
+  if(v.length>2)v=v.substring(0,2)+' / '+v.substring(2);
+  el.value=v;
+}
+
+function submitPay(){
+  const name=document.getElementById('f-name').value.trim();
+  const phone=document.getElementById('f-phone').value.trim();
+  const email=document.getElementById('f-email').value.trim();
+  const card=document.getElementById('f-card').value.trim();
+  if(!name||!phone||!email||!card){alert('請填寫姓名、電話、Email 及信用卡號');return;}
+  // 送出後顯示成功（實際串接金流請聯繫開發者）
+  document.getElementById('pay-form-wrap').style.display='none';
+  document.getElementById('pay-success-wrap').style.display='block';
+}
+</script>
+</body>
+</html>"""
+
+with open("/mnt/user-data/outputs/index.html","w") as f:
+    f.write(html)
+size=os.path.getsize("/mnt/user-data/outputs/index.html")
+print(f"完成！{size//1024} KB")
+EOF
